@@ -14,7 +14,7 @@ const port = Number(process.env.PORT || 4173);
 const host = process.env.HOST || "127.0.0.1";
 const historyFile = resolve(process.env.ACTION_LOG_PATH || fileURLToPath(new URL("./data/action-history.json", import.meta.url)));
 const historyLimit = Math.max(100, Math.min(50_000, Number(process.env.ACTION_LOG_MAX_ENTRIES) || 5_000));
-const types = { ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".json": "application/json; charset=utf-8" };
+const types = { ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".json": "application/json; charset=utf-8", ".svg": "image/svg+xml" };
 
 let history = [];
 let historyWrite = Promise.resolve();
