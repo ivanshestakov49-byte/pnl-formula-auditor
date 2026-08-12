@@ -9,3 +9,20 @@
 .cell-link:hover { border-color: currentColor; }
 .cell-link span { font: 11px Arial, sans-serif; }
 .instruction{margin:18px 0 14px;padding-left:22px;color:var(--ink);line-height:1.75;font-size:14px}.hint{font-size:13px!important;line-height:1.55!important}.check{flex-direction:row;align-items:center;font-weight:600;margin-top:-3px}.check input{width:18px;height:18px;margin:0}.check span{line-height:1.3}
+.history{margin-top:80px;border-top:1px solid var(--line);padding-top:50px}
+.history-head{display:flex;justify-content:space-between;align-items:end;gap:24px}
+.history-head h2{font-size:30px;letter-spacing:-.025em;margin:12px 0 7px}
+.history-head p{color:var(--muted);font-size:13px;margin:0}
+.history-metrics{display:grid;grid-template-columns:repeat(3,1fr);margin:25px 0 18px;background:white;border:1px solid var(--line);border-radius:var(--radius)}
+.history-metrics div{padding:18px 22px;border-right:1px solid var(--line)}
+.history-metrics div:last-child{border-right:0}
+.history-metrics b{display:block;font-size:22px}
+.history-metrics span{font-size:12px;color:var(--muted)}
+.history-message{min-height:18px;margin:0 0 12px;color:var(--muted);font-size:12px}
+.history-table{min-width:760px}
+.history-table td:first-child{font:inherit;color:var(--ink);white-space:nowrap}
+.history-table td:last-child b,.history-table td:last-child small{display:block}
+.history-file{display:inline-flex;align-items:center;gap:5px;color:var(--green);font-weight:700;text-decoration:none}
+.history-file:hover{text-decoration:underline}
+.history-file span{font-size:10px}
+@media(max-width:760px){.history{margin-top:58px;padding-top:38px}.history-head{align-items:start}.history-metrics{grid-template-columns:1fr}.history-metrics div{border-right:0;border-bottom:1px solid var(--line)}.history-metrics div:last-child{border-bottom:0}}

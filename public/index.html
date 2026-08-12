@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Проверка формул ПНЛ</title><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="links.css">
+  <title>Проверка формул ПНЛ</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="links.css">
 </head>
 <body>
   <header><div class="mark">P&amp;L</div><div><h1>Проверка формул</h1><p>Контроль итоговых статей</p></div><span class="safe">Файл не изменяется</span></header>
@@ -24,6 +24,20 @@
       <div class="filters"><button class="chip active" data-filter="all">Все</button><button class="chip" data-filter="missing">Нет формулы</button><button class="chip" data-filter="wrong">Неверная</button></div>
       <div class="table-wrap"><table><thead><tr><th>Месяц</th><th>Ячейка</th><th>Колонка</th><th>Статья</th><th>Проблема</th><th>Формула</th><th>Ожидалось</th></tr></thead><tbody id="issues"></tbody></table></div>
       <div id="empty" class="empty hidden"><b>Ошибок не найдено</b><span>Все обнаруженные итоговые статьи содержат согласованные формулы.</span></div>
+    </section>
+    <section id="history" class="history">
+      <div class="history-head">
+        <div><span class="step">Журнал действий</span><h2>История проверок</h2><p>Здесь сохраняются выполненные проверки. Таблицы остаются доступными только для чтения.</p></div>
+        <button id="refreshHistory" class="secondary" type="button">Обновить</button>
+      </div>
+      <div class="history-metrics" aria-label="Сводка журнала">
+        <div><b id="historyChecks">0</b><span>проверок</span></div>
+        <div><b id="historyFiles">0</b><span>файлов</span></div>
+        <div><b id="historyProblems">0</b><span>проблем найдено</span></div>
+      </div>
+      <p id="historyMessage" class="history-message" role="status">Загружаем журнал…</p>
+      <div id="historyTable" class="table-wrap hidden"><table class="history-table"><thead><tr><th>Дата</th><th>Файл</th><th>Лист</th><th>Период</th><th>Статьи</th><th>Проблемы</th></tr></thead><tbody id="historyRows"></tbody></table></div>
+      <div id="historyEmpty" class="empty hidden"><b>Проверок пока не было</b><span>Первая запись появится здесь после проверки формул.</span></div>
     </section>
     <details><summary>Как работает проверка</summary><p>Приложение находит колонки «План» и «Факт» выбранного месяца, распознаёт номера статей и их иерархию. Верхний уровень — статья, у которой есть непосредственные дочерние статьи. Обе колонки проверяются независимо. Формула считается подозрительной, если содержит ошибку, не ссылается на дочерние строки или захватывает строки вне своей ветки.</p></details>
   </main>

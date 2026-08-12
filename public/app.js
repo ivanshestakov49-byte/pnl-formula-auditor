@@ -1,5 +1,5 @@
 const $ = (s) => document.querySelector(s);
-const state = { spreadsheetId: "", requestedGid: "", sheetIds: {}, currentGid: "", issues: [], rows: [], filter: "all" };
+const state = { spreadsheetId: "", spreadsheetTitle: "", requestedGid: "", sheetIds: {}, currentGid: "", issues: [], rows: [], filter: "all", history: [], historySummary: {} };
 const months = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
 function fillMonths(){const selected=$("#month").value||"7";$("#month").innerHTML="";months.forEach((name,i)=>$("#month").add(new Option(name,String(i+1),false,String(i+1)===selected)));}
 fillMonths();
@@ -15,8 +15,9 @@ function articleCell(v) { const m=String(v??"").replace(/\u00a0/g," ").trim().ma
 function api(path) { return fetch(`/api/sheets/${state.spreadsheetId}${path}`).then(async r => { const data=await r.json(); if (!r.ok) throw new Error(data.error?.message || "Google Sheets API error"); return data; }); }
 
 async function loadSheets() {
-  const meta = await api("?fields=sheets.properties");
+  const meta = await api("?fields=properties.title,sheets.properties");
   const select = $("#sheet"); select.innerHTML = '<option value="">Определить автоматически</option>';
+  state.spreadsheetTitle=meta.properties?.title||"";
   state.sheetIds={}; meta.sheets.forEach(s => { state.sheetIds[s.properties.title]=String(s.properties.sheetId); select.add(new Option(s.properties.title, s.properties.title)); });
   const requested = meta.sheets.find(s => String(s.properties.sheetId) === state.requestedGid)?.properties.title;
   if (requested) select.value = requested;
@@ -91,9 +92,49 @@ function renderRows() {
 }
 function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 
+function historyItems(payload) {
+  const items=Array.isArray(payload)?payload:(Array.isArray(payload?.items)?payload.items:(Array.isArray(payload?.history)?payload.history:[]));
+  return items.filter(item=>item&&typeof item==="object");
+}
+function historyDate(value) {
+  const date=new Date(value); if(Number.isNaN(date.getTime()))return "—";
+  return new Intl.DateTimeFormat("ru-RU",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}).format(date);
+}
+function historyLink(item) {
+  const id=String(item.spreadsheetId||"").match(/^[\w-]{20,}$/)?.[0]; if(!id)return "";
+  return `https://docs.google.com/spreadsheets/d/${id}/edit`;
+}
+function historyPeriod(item) {
+  if(item.mode==="year")return `Все месяцы ${item.year}`;
+  const month=Number(item.month); return month>=1&&month<=12?`${months[month-1]} ${item.year}`:`${item.year||"—"}`;
+}
+function renderHistory() {
+  const items=state.history, summary=state.historySummary;
+  $("#historyChecks").textContent=Number(summary.totalRuns??items.length); $("#historyFiles").textContent=Number(summary.uniqueFiles??new Set(items.map(item=>item.spreadsheetId).filter(Boolean)).size);
+  $("#historyProblems").textContent=Number(summary.totalIssues??items.reduce((sum,item)=>sum+Number(item.issueCount||0),0));
+  $("#historyRows").innerHTML=items.map(item=>{
+    const url=historyLink(item), name=item.spreadsheetName||"Google Таблица", sheet=item.sheetName||"—", period=historyPeriod(item);
+    const file=url?`<a class="history-file" href="${url}" target="_blank" rel="noopener">${escapeHtml(name)}<span aria-hidden="true">↗</span></a>`:escapeHtml(name);
+    const issues=Number(item.issueCount||0), missing=Number(item.missingFormulaCount||0), wrong=Number(item.incorrectFormulaCount||0);
+    const details=issues?`<small>${missing} без формулы · ${wrong} неверных</small>`:"<small>Ошибок нет</small>";
+    return `<tr><td><time datetime="${escapeHtml(item.createdAt||"")}">${historyDate(item.createdAt)}</time></td><td>${file}</td><td>${escapeHtml(sheet)}</td><td>${escapeHtml(period)}</td><td><b>${Number(item.checkedArticles||0)}</b></td><td><b>${issues}</b>${details}</td></tr>`;
+  }).join("");
+  $("#historyTable").classList.toggle("hidden",!items.length); $("#historyEmpty").classList.toggle("hidden",items.length>0);
+}
+async function loadHistory() {
+  $("#refreshHistory").disabled=true; $("#historyMessage").textContent="Загружаем журнал…";
+  try { const response=await fetch("/api/history?limit=100",{headers:{Accept:"application/json"}}); if(!response.ok)throw new Error("Журнал временно недоступен"); const payload=await response.json(); state.history=historyItems(payload); state.historySummary=payload.summary||{}; renderHistory(); $("#historyMessage").textContent=state.history.length?`Показаны последние проверки: ${state.history.length}.`:""; }
+  catch(err){$("#historyMessage").textContent=err.message;}
+  finally{$("#refreshHistory").disabled=false;}
+}
+async function saveHistory(entry) {
+  try { const response=await fetch("/api/history",{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(entry)}); if(!response.ok)throw new Error("Не удалось сохранить запись"); await loadHistory(); }
+  catch(err){$("#historyMessage").textContent=`Проверка выполнена, но запись в журнал не сохранена: ${err.message}.`;}
+}
+
 $("#url").addEventListener("change", async()=>{ state.spreadsheetId=spreadsheetId($("#url").value); state.requestedGid=sheetGid($("#url").value); if(state.spreadsheetId) try { await loadSheets(); } catch {} });
 $("#year").addEventListener("change",fillMonths); $("#allMonths").addEventListener("change",e=>{$("#month").disabled=e.target.checked;});
-$("#form").addEventListener("submit", async e => { e.preventDefault(); const btn=e.submitter; try {
+$("#form").addEventListener("submit", async e => { e.preventDefault(); const btn=e.submitter, startedAt=performance.now(); try {
   btn.disabled=true; $("#message").textContent="Читаем общедоступную Google Таблицу…";
   state.spreadsheetId=spreadsheetId($("#url").value); state.requestedGid=sheetGid($("#url").value); if(!state.spreadsheetId)throw new Error("Не удалось распознать ссылку на Google Таблицу."); const titles=await loadSheets(), title=chooseSheet(titles); $("#sheet").value=title; state.currentGid=state.sheetIds[title]||state.requestedGid;
   const range=encodeURIComponent(`'${title.replaceAll("'","''")}'!A1:ZZ2000`); $("#message").textContent="Читаем структуру статей и формулы…";
@@ -103,6 +144,10 @@ $("#form").addEventListener("submit", async e => { e.preventDefault(); const btn
   if(!results.length)throw new Error(`Не найдены колонки «План» и «Факт» за ${year} год.`);
   const combined={articles:results[0].part.articles,parents:results[0].part.parents,issues:results.flatMap(x=>x.part.issues)}, heading=$("#allMonths").checked?`Все месяцы ${year}`:`${months[results[0].month-1]} ${year} · ${results[0].cols.map(x=>`${x.label} ${colName(x.col)}`).join(" / ")}`;
   render(combined,title,heading); $("#message").textContent=`Готово. Проверено месяцев: ${results.length}; статей: ${combined.articles.length}.${skipped.length?` Не найдены: ${skipped.join(", ")}.`:""} Изменений в таблице не сделано.`;
+  const missing=combined.issues.filter(x=>x.type==="missing").length, wrong=combined.issues.filter(x=>x.type==="wrong").length;
+  void saveHistory({spreadsheetId:state.spreadsheetId,spreadsheetUrl:`https://docs.google.com/spreadsheets/d/${state.spreadsheetId}/edit`,spreadsheetName:state.spreadsheetTitle||title,sheetName:title,mode:$("#allMonths").checked?"year":"month",year,month:$("#allMonths").checked?null:results[0].month,status:"success",checkedArticles:combined.articles.length,issueCount:combined.issues.length,missingFormulaCount:missing,incorrectFormulaCount:wrong,durationMs:Math.max(0,Math.round(performance.now()-startedAt)),errorMessage:""});
  } catch(err){$("#message").textContent=`Ошибка: ${err.message}`;} finally{btn.disabled=false;} });
 document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));b.classList.add("active");state.filter=b.dataset.filter;renderRows();});
 $("#export").onclick=()=>{const head=["Месяц","Ячейка","Колонка","Код","Статья","Тип","Причина","Формула","Ожидалось"], csv=[head,...state.issues.map(x=>[x.month,x.address,x.column,x.code,x.title,x.type,x.reason,x.formula,x.expected])].map(r=>r.map(v=>`"${String(v??"").replaceAll('"','""')}"`).join(";")).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv"}));a.download="проверка-формул-пнл.csv";a.click();URL.revokeObjectURL(a.href);};
+$("#refreshHistory").onclick=loadHistory;
+loadHistory();
