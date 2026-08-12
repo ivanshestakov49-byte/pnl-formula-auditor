@@ -98,7 +98,7 @@ function historyItems(payload) {
 }
 function historyDate(value) {
   const date=new Date(value); if(Number.isNaN(date.getTime()))return "—";
-  return new Intl.DateTimeFormat("ru-RU",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}).format(date);
+  return new Intl.DateTimeFormat("ru-RU",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",timeZone:"Asia/Bishkek"}).format(date);
 }
 function historyLink(item) {
   const id=String(item.spreadsheetId||"").match(/^[\w-]{20,}$/)?.[0]; if(!id)return "";
