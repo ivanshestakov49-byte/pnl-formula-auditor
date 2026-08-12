@@ -1,0 +1,11 @@
+.cell-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--green);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+.cell-link:hover { border-color: currentColor; }
+.cell-link span { font: 11px Arial, sans-serif; }
+.instruction{margin:18px 0 14px;padding-left:22px;color:var(--ink);line-height:1.75;font-size:14px}.hint{font-size:13px!important;line-height:1.55!important}.check{flex-direction:row;align-items:center;font-weight:600;margin-top:-3px}.check input{width:18px;height:18px;margin:0}.check span{line-height:1.3}

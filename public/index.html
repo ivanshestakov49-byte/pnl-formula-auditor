@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Проверка формул ПНЛ</title><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="links.css">
+</head>
+<body>
+  <header><div class="mark">P&amp;L</div><div><h1>Проверка формул</h1><p>Контроль итоговых статей</p></div><span class="safe">Файл не изменяется</span></header>
+  <main>
+    <section class="setup">
+      <div class="intro"><span class="step">Как пользоваться</span><h2>Проверка ПНЛ</h2><ol class="instruction"><li>Вставьте ссылку на файл ПНЛ.</li><li>Выберите месяц и нужный лист.</li><li>Нажмите «Проверить формулы».</li></ol><p class="hint">Ниже появятся ячейки без формулы или с неверной формулой. Нажмите на адрес ячейки — файл откроется сразу в нужном месте.</p></div>
+      <form id="form">
+        <label>Ссылка на Google Таблицу<input id="url" required inputmode="url" autocomplete="off" placeholder="https://docs.google.com/spreadsheets/d/…"></label>
+        <div class="row"><label>Год<select id="year"><option value="2026">2026</option><option value="2027">2027</option></select></label><label>Месяц<select id="month"></select></label></div>
+        <label class="check"><input id="allMonths" type="checkbox"><span>Проверить все месяцы выбранного года</span></label>
+        <label>Лист<select id="sheet"><option value="">Определить автоматически</option></select></label>
+        <button type="submit">Проверить формулы <span>→</span></button>
+        <p id="message" role="status"></p>
+      </form>
+    </section>
+    <section id="results" class="results hidden">
+      <div class="result-head"><div><span class="step">02 / результат</span><h2 id="resultTitle">Результат проверки</h2></div><button id="export" class="secondary">Скачать CSV</button></div>
+      <div class="metrics"><div><b id="parents">0</b><span>верхнего уровня</span></div><div><b id="missing">0</b><span>без формулы</span></div><div><b id="wrong">0</b><span>подозрительных</span></div></div>
+      <div class="filters"><button class="chip active" data-filter="all">Все</button><button class="chip" data-filter="missing">Нет формулы</button><button class="chip" data-filter="wrong">Неверная</button></div>
+      <div class="table-wrap"><table><thead><tr><th>Месяц</th><th>Ячейка</th><th>Колонка</th><th>Статья</th><th>Проблема</th><th>Формула</th><th>Ожидалось</th></tr></thead><tbody id="issues"></tbody></table></div>
+      <div id="empty" class="empty hidden"><b>Ошибок не найдено</b><span>Все обнаруженные итоговые статьи содержат согласованные формулы.</span></div>
+    </section>
+    <details><summary>Как работает проверка</summary><p>Приложение находит колонки «План» и «Факт» выбранного месяца, распознаёт номера статей и их иерархию. Верхний уровень — статья, у которой есть непосредственные дочерние статьи. Обе колонки проверяются независимо. Формула считается подозрительной, если содержит ошибку, не ссылается на дочерние строки или захватывает строки вне своей ветки.</p></details>
+  </main>
+  <script type="module" src="app.js"></script>
+</body></html>
