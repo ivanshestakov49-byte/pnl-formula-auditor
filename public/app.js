@@ -1,5 +1,5 @@
 const $ = (s) => document.querySelector(s);
-const state = { spreadsheetId: "", spreadsheetTitle: "", requestedGid: "", sheetIds: {}, currentGid: "", issues: [], rows: [], filter: "all", history: [], historySummary: {} };
+const state = { spreadsheetId: "", spreadsheetTitle: "", requestedGid: "", sheetIds: {}, currentGid: "", issues: [], rows: [], filter: "all", history: [], historySummary: {}, historyLoaded: false };
 const months = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
 function fillMonths(){const selected=$("#month").value||"7";$("#month").innerHTML="";months.forEach((name,i)=>$("#month").add(new Option(name,String(i+1),false,String(i+1)===selected)));}
 fillMonths();
@@ -123,13 +123,13 @@ function renderHistory() {
 }
 async function loadHistory() {
   $("#refreshHistory").disabled=true; $("#historyMessage").textContent="Загружаем журнал…";
-  try { const response=await fetch("/api/history?limit=100",{headers:{Accept:"application/json"}}); if(!response.ok)throw new Error("Журнал временно недоступен"); const payload=await response.json(); state.history=historyItems(payload); state.historySummary=payload.summary||{}; renderHistory(); $("#historyMessage").textContent=state.history.length?`Показаны последние проверки: ${state.history.length}.`:""; }
+  try { const response=await fetch("/api/history?limit=100",{headers:{Accept:"application/json"}}); if(!response.ok)throw new Error("Журнал временно недоступен"); const payload=await response.json(); state.history=historyItems(payload); state.historySummary=payload.summary||{}; state.historyLoaded=true; renderHistory(); $("#historyMessage").textContent=state.history.length?`Показаны последние проверки: ${state.history.length}.`:""; }
   catch(err){$("#historyMessage").textContent=err.message;}
   finally{$("#refreshHistory").disabled=false;}
 }
 async function saveHistory(entry) {
-  try { const response=await fetch("/api/history",{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(entry)}); if(!response.ok)throw new Error("Не удалось сохранить запись"); await loadHistory(); }
-  catch(err){$("#historyMessage").textContent=`Проверка выполнена, но запись в журнал не сохранена: ${err.message}.`;}
+  try { const response=await fetch("/api/history",{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(entry)}); if(!response.ok)throw new Error("Не удалось сохранить запись"); if(state.historyLoaded&&!$("#historyPanel").classList.contains("hidden"))await loadHistory(); }
+  catch(err){if(!$("#historyPanel").classList.contains("hidden"))$("#historyMessage").textContent=`Проверка выполнена, но запись в журнал не сохранена: ${err.message}.`;}
 }
 
 $("#url").addEventListener("change", async()=>{ state.spreadsheetId=spreadsheetId($("#url").value); state.requestedGid=sheetGid($("#url").value); if(state.spreadsheetId) try { await loadSheets(); } catch {} });
@@ -150,4 +150,8 @@ $("#form").addEventListener("submit", async e => { e.preventDefault(); const btn
 document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));b.classList.add("active");state.filter=b.dataset.filter;renderRows();});
 $("#export").onclick=()=>{const head=["Месяц","Ячейка","Колонка","Код","Статья","Тип","Причина","Формула","Ожидалось"], csv=[head,...state.issues.map(x=>[x.month,x.address,x.column,x.code,x.title,x.type,x.reason,x.formula,x.expected])].map(r=>r.map(v=>`"${String(v??"").replaceAll('"','""')}"`).join(";")).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv"}));a.download="проверка-формул-пнл.csv";a.click();URL.revokeObjectURL(a.href);};
 $("#refreshHistory").onclick=loadHistory;
-loadHistory();
+$("#toggleHistory").onclick=()=>{
+  const panel=$("#historyPanel"), opening=panel.classList.contains("hidden");
+  panel.classList.toggle("hidden",!opening); $("#toggleHistory").setAttribute("aria-expanded",String(opening));
+  if(opening&&!state.historyLoaded)void loadHistory();
+};

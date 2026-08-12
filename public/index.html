@@ -25,21 +25,24 @@
       <div class="table-wrap"><table><thead><tr><th>Месяц</th><th>Ячейка</th><th>Колонка</th><th>Статья</th><th>Проблема</th><th>Формула</th><th>Ожидалось</th></tr></thead><tbody id="issues"></tbody></table></div>
       <div id="empty" class="empty hidden"><b>Ошибок не найдено</b><span>Все обнаруженные итоговые статьи содержат согласованные формулы.</span></div>
     </section>
-    <section id="history" class="history">
-      <div class="history-head">
-        <div><span class="step">Журнал действий</span><h2>История проверок</h2><p>Здесь сохраняются выполненные проверки. Таблицы остаются доступными только для чтения.</p></div>
-        <button id="refreshHistory" class="secondary" type="button">Обновить</button>
-      </div>
-      <div class="history-metrics" aria-label="Сводка журнала">
-        <div><b id="historyChecks">0</b><span>проверок</span></div>
-        <div><b id="historyFiles">0</b><span>файлов</span></div>
-        <div><b id="historyProblems">0</b><span>проблем найдено</span></div>
-      </div>
-      <p id="historyMessage" class="history-message" role="status">Загружаем журнал…</p>
-      <div id="historyTable" class="table-wrap hidden"><table class="history-table"><thead><tr><th>Дата</th><th>Файл</th><th>Лист</th><th>Период</th><th>Статьи</th><th>Проблемы</th></tr></thead><tbody id="historyRows"></tbody></table></div>
-      <div id="historyEmpty" class="empty hidden"><b>Проверок пока не было</b><span>Первая запись появится здесь после проверки формул.</span></div>
-    </section>
     <details><summary>Как работает проверка</summary><p>Приложение находит колонки «План» и «Факт» выбранного месяца, распознаёт номера статей и их иерархию. Верхний уровень — статья, у которой есть непосредственные дочерние статьи. Обе колонки проверяются независимо. Формула считается подозрительной, если содержит ошибку, не ссылается на дочерние строки или захватывает строки вне своей ветки.</p></details>
+    <section id="history" class="history">
+      <button id="toggleHistory" class="history-toggle" type="button" aria-expanded="false" aria-controls="historyPanel">Журнал проверок <span aria-hidden="true">↓</span></button>
+      <div id="historyPanel" class="history-panel hidden">
+        <div class="history-head">
+          <div><h2>История проверок</h2><p>Список загружается только после открытия журнала.</p></div>
+          <button id="refreshHistory" class="secondary" type="button">Обновить</button>
+        </div>
+        <div class="history-metrics" aria-label="Сводка журнала">
+          <div><b id="historyChecks">0</b><span>проверок</span></div>
+          <div><b id="historyFiles">0</b><span>файлов</span></div>
+          <div><b id="historyProblems">0</b><span>проблем найдено</span></div>
+        </div>
+        <p id="historyMessage" class="history-message" role="status"></p>
+        <div id="historyTable" class="table-wrap hidden"><table class="history-table"><thead><tr><th>Дата</th><th>Файл</th><th>Лист</th><th>Период</th><th>Статьи</th><th>Проблемы</th></tr></thead><tbody id="historyRows"></tbody></table></div>
+        <div id="historyEmpty" class="empty hidden"><b>Проверок пока не было</b><span>Первая запись появится здесь после проверки формул.</span></div>
+      </div>
+    </section>
   </main>
   <script type="module" src="app.js"></script>
 </body></html>
