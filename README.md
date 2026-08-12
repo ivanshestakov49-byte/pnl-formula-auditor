@@ -17,8 +17,37 @@ npm start
 
 - команда запуска: `npm start`;
 - переменные окружения: `GOOGLE_SHEETS_API_KEY`, `HOST=0.0.0.0`;
+- журнал проверок: `ACTION_LOG_PATH=/data/action-history.json`, постоянный том Coolify должен быть подключён к `/data`;
+- необязательный предел журнала: `ACTION_LOG_MAX_ENTRIES` (по умолчанию 5000);
 - порт приложения: `4173`;
 - проверка состояния: `/health`.
+
+## Журнал проверок
+
+Сервер хранит только технические метаданные выполненных проверок: название и идентификатор файла, лист, период, количество проверенных статей и найденных проблем. Формулы, значения ячеек, ключ Google API и содержимое таблиц в журнал не попадают. Google Таблицы по-прежнему открываются только на чтение.
+
+- `GET /api/history?limit=100` — последние записи и общая статистика;
+- `POST /api/history` — добавить результат проверки.
+
+Пример тела `POST`:
+
+```json
+{
+  "spreadsheetId": "1MuqXA5crj0WQk3yV_W5-f2XWZSx2T5yVuno8AfNcWBY",
+  "spreadsheetName": "Чистовой ПНЛ",
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1MuqXA5crj0WQk3yV_W5-f2XWZSx2T5yVuno8AfNcWBY/edit",
+  "sheetName": "Пишпек 2026",
+  "mode": "month",
+  "year": 2026,
+  "month": 7,
+  "status": "success",
+  "checkedArticles": 429,
+  "issueCount": 6,
+  "missingFormulaCount": 4,
+  "incorrectFormulaCount": 2,
+  "durationMs": 1250
+}
+```
 
 ## Правило аудита
 

@@ -1,1 +1,3 @@
 server-config.json
+data/action-history.json
+data/*.tmp
